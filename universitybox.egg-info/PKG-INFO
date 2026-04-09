@@ -1,0 +1,278 @@
+Metadata-Version: 2.4
+Name: universitybox
+Version: 0.1.0
+Summary: DNA — Dynamic Nonlinear Adaptive time series forecaster and audience segmentation toolkit
+Author-email: UniversityBox Data Team <data@universitybox.it>
+License: MIT License
+        
+        Copyright (c) 2026 UniversityBox Data Team
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+Project-URL: Homepage, https://github.com/universitybox/universitybox-pkg
+Project-URL: Documentation, https://github.com/universitybox/universitybox-pkg/blob/main/MATH.md
+Project-URL: Repository, https://github.com/universitybox/universitybox-pkg
+Project-URL: Bug Tracker, https://github.com/universitybox/universitybox-pkg/issues
+Project-URL: Changelog, https://github.com/universitybox/universitybox-pkg/blob/main/CHANGELOG.md
+Keywords: time-series,forecasting,decomposition,kalman-filter,ridge-regression,rbf,segmentation,students,DNA
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Typing :: Typed
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.24
+Requires-Dist: scipy>=1.10
+Provides-Extra: viz
+Requires-Dist: matplotlib>=3.7; extra == "viz"
+Provides-Extra: data
+Requires-Dist: pandas>=2.0; extra == "data"
+Provides-Extra: full
+Requires-Dist: matplotlib>=3.7; extra == "full"
+Requires-Dist: pandas>=2.0; extra == "full"
+Provides-Extra: dev
+Requires-Dist: pytest>=7; extra == "dev"
+Requires-Dist: pandas>=2.0; extra == "dev"
+Requires-Dist: matplotlib>=3.7; extra == "dev"
+Requires-Dist: build; extra == "dev"
+Requires-Dist: twine; extra == "dev"
+Dynamic: license-file
+
+# universitybox
+
+**DNA — Dynamic Nonlinear Adaptive Time Series Forecaster**
+
+[![PyPI](https://img.shields.io/pypi/v/universitybox)](https://pypi.org/project/universitybox/)
+[![Python](https://img.shields.io/pypi/pyversions/universitybox)](https://pypi.org/project/universitybox/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-22%20passed-brightgreen)]()
+
+A pure-NumPy/SciPy time series forecasting library built around the **DNA** model — a three-stage hierarchical forecaster that combines classical decomposition, nonlinear basis expansion, and adaptive Kalman filtering.
+
+No TensorFlow. No PyTorch. No black boxes. Every equation is documented.
+
+---
+
+## Install
+
+```bash
+pip install universitybox
+```
+
+With optional extras:
+
+```bash
+pip install "universitybox[full]"   # + pandas + matplotlib
+pip install "universitybox[viz]"    # + matplotlib only
+pip install "universitybox[data]"   # + pandas only
+```
+
+---
+
+## Quick start
+
+```python
+import numpy as np
+from universitybox import DNA
+
+# Any 1-D time series
+y = np.array([112, 118, 132, 129, 121, 135, 148, 148, 136, 119,
+              104,  118, 115, 126, 141, 135, 125, 149, 170, 170,
+              158, 133, 114, 140, 145, 150, 178, 163, 172, 178,
+              199, 199, 184, 162, 146, 166, 171, 180, 193, 181])
+
+model = DNA(period=12)
+model.fit(y)
+
+point_forecast      = model.forecast(h=12)
+lower, upper        = model.predict_interval(h=12, level=0.95)
+metrics             = model.evaluate(y[-6:])   # held-out test
+
+model.summary()
+```
+
+---
+
+## The DNA Model
+
+DNA decomposes the time series into three progressively finer layers:
+
+```
+y_t  =  μ_t          (D-stage: trend via Henderson filter)
+      + s_t          (D-stage: seasonal via Fourier OLS)
+      + f(Φ(x_t))   (N-stage: nonlinear correction via Ridge + RBF)
+      + ℓ_t          (A-stage: adaptive correction via Kalman LLT)
+      + η_t          (irreducible noise)
+```
+
+Each stage is fit on the residual of the previous stage.
+Final forecast = inverse-variance weighted combination of all four components.
+
+**Full mathematical derivation** (Henderson weights, RKHS interpretation, Kalman recursion, MLE, consistency proofs): see [`MATH.md`](MATH.md).
+
+---
+
+## All parameters
+
+```python
+DNA(
+    period        = "auto",   # int or 'auto' — seasonal period (e.g. 4, 12, 7)
+    trend_window  = "auto",   # Henderson filter half-length m
+    n_fourier     = 3,        # Fourier harmonics K
+    poly_degree   = 2,        # polynomial degree for N-stage feature map
+    n_lags        = 4,        # AR lags for N-stage feature map
+    n_rbf         = 10,       # RBF centres (k-means++ selected)
+    rbf_gamma     = "auto",   # RBF bandwidth γ ('auto' = median heuristic)
+    ridge_alpha   = 1e-3,     # L2 regularisation λ
+    kalman_q_level= 1e-4,     # Kalman level process noise
+    kalman_q_slope= 1e-6,     # Kalman slope process noise
+    kalman_obs_var= 1e-2,     # Kalman observation noise
+    kalman_mle    = False,    # estimate Kalman noise by MLE
+    ensemble      = "iv",     # 'iv' | 'equal' | 'ols'
+    ci_method     = "analytical",  # 'analytical' | 'bootstrap'
+    ci_bootstrap_n= 500,      # bootstrap replications
+    random_state  = None,     # reproducibility seed
+)
+```
+
+---
+
+## API reference
+
+### `DNA.fit(y)`
+Fit the model. `y` must be a 1-D array with ≥ 4 observations and no NaN/Inf.
+
+### `DNA.forecast(h)`
+Return point forecasts for horizons 1 … h.
+
+### `DNA.predict_interval(h, level=0.95)`
+Return `(lower, upper)` prediction interval arrays of length h.
+
+### `DNA.evaluate(y_test)`
+Compute MAE, RMSE, MAPE, sMAPE, MASE against a held-out test set.
+
+### `DNA.fitted_values`
+In-sample fitted values ŷ₁, ..., ŷₙ.
+
+### `DNA.residuals`
+In-sample residuals y − ŷ.
+
+### `DNA.components`
+Dict of in-sample arrays: `trend`, `seasonal`, `nonlinear`, `adaptive`.
+
+### `DNA.weights`
+Ensemble weights α, β, γ, δ for each component.
+
+### `DNA.summary()`
+Print a human-readable model card.
+
+---
+
+## Metrics
+
+```python
+from universitybox import metrics
+
+metrics.mae(y_true, y_pred)
+metrics.rmse(y_true, y_pred)
+metrics.mape(y_true, y_pred)
+metrics.smape(y_true, y_pred)
+metrics.mase(y_true, y_pred, y_train=y_train, period=4)
+metrics.crps_gaussian(y_true, mu=fc, sigma=sigma_h)
+metrics.summary(y_true, y_pred)   # dict of all metrics
+```
+
+---
+
+## Audience segmentation
+
+```python
+from universitybox.segments import Club
+
+category_map = {
+    "lenovo":     "Technology",
+    "hp store":   "Technology",
+    "samsung":    "Technology",
+    "zara":       "Fashion",
+    "zalando":    "Fashion",
+}
+
+club = Club(category_map=category_map, min_cta=6)
+club.fit(events_df)   # DataFrame with columns: user_id, brand, cta_count
+
+print(club.size("Technology"))           # number of members
+print(club.share("Technology"))          # fraction of classified users
+print(club.summary())                    # all clubs with size + share
+tech_users = club.members("Technology") # list of user_ids
+```
+
+---
+
+## Design principles
+
+- **Pure NumPy/SciPy** — no heavy ML framework required
+- **Minimal dependencies** — `numpy` + `scipy` only for the core forecaster
+- **Fully documented math** — every formula in the code has an equation tag in `MATH.md`
+- **sklearn-compatible interface** — `fit` / `forecast` / `score`
+- **Typed** — `py.typed` marker, full type annotations
+- **Tested** — 22 unit tests covering all components, edge cases, and metrics
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Install dev dependencies: `pip install -e ".[dev]"`
+4. Run tests: `pytest tests/ -v`
+5. Open a pull request
+
+All contributions welcome — new forecasters (implement `BaseForecaster`), new metrics, new segmentation methods.
+
+---
+
+## Citation
+
+If you use this package in research, please cite:
+
+```bibtex
+@software{universitybox2026,
+  author  = {UniversityBox Data Team},
+  title   = {universitybox: DNA Dynamic Nonlinear Adaptive Forecaster},
+  year    = {2026},
+  url     = {https://github.com/universitybox/universitybox-pkg},
+  version = {0.1.0}
+}
+```
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
