@@ -5,7 +5,7 @@
 [![PyPI](https://img.shields.io/pypi/v/universitybox)](https://pypi.org/project/universitybox/)
 [![Python](https://img.shields.io/pypi/pyversions/universitybox)](https://pypi.org/project/universitybox/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/Parsa-Hajian/universitybox/blob/main/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-22%20passed-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-30%20passed-brightgreen)]()
 
 A pure-NumPy/SciPy time series forecasting library built around the **DNA** model — a three-stage hierarchical forecaster combining classical decomposition, nonlinear basis expansion, and adaptive Kalman filtering.
 
@@ -187,6 +187,55 @@ metrics.mase(y_true, y_pred, y_train=y_train, period=4)
 metrics.crps_gaussian(y_true, mu=fc, sigma=sigma_h)
 metrics.summary(y_true, y_pred)          # dict of all metrics
 ```
+
+---
+
+## Survey Response Synthesizer
+
+Have a small set of real survey responses (30–200)? Generate a large synthetic population that preserves the same distributions and cross-question correlations.
+
+```python
+import pandas as pd
+from universitybox.survey import SurveySchema, SurveySynthesizer
+
+# Define the survey structure — specify scale per question
+schema = SurveySchema()
+schema.add_categorical("Preferred_Brand", categories=["Lenovo", "HP", "Dell"])
+schema.add_ordinal("Overall_Satisfaction", scale=(1, 5))
+schema.add_ordinal("Likelihood_to_Recommend", scale=(1, 7))
+schema.add_continuous("Age", bounds=(18, 65))
+
+# Fit on real responses, generate synthetic population
+real_df = pd.read_csv("my_survey_responses.csv")   # e.g. 50 real rows
+
+synth = SurveySynthesizer(n_mcmc=500, n_seeds=10, random_state=42)
+synth.fit(real_df, schema)
+population = synth.synthesize(N=2000)   # returns DataFrame of 2000 rows
+```
+
+### How it works
+
+**Stage 1 — Bayesian per-question estimation** (handles small N without overfitting):
+- Categorical: Dirichlet-Multinomial with Jeffreys prior
+- Ordinal/Likert: Bayesian Ordinal Probit via Gibbs sampler (Albert & Chib 1993)
+- Continuous: Normal-Inverse-Gamma conjugate model
+
+**Stage 2 — Gaussian Copula** preserves cross-question correlations:
+rank-based CDF transform → probit scores → Ledoit-Wolf regularised correlation → MVN draw → back-map via quantile functions.
+
+**Stage 3 — NHOP oversampling**:
+- k-means++ seed selection to anchor coverage
+- NHOP rejection: discard synthesised points too far from the real sample (avoids hallucinated response patterns)
+- Density-proportional resampling to reach target N
+
+### Optional no-code GUI
+
+```python
+from universitybox.survey import launch_gui
+launch_gui()   # opens Tkinter window — no external dependencies
+```
+
+Three tabs: Schema Builder / Data Input / Synthesize & Export.
 
 ---
 

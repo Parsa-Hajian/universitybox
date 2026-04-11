@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "universitybox"
-version = "0.1.4"
-description = "DNA — Dynamic Nonlinear Adaptive time series forecaster and audience segmentation toolkit"
+version = "0.1.7"
+description = "DNA forecaster, audience segmentation, and survey response synthesizer toolkit"
 readme = "README.md"
 license = { file = "LICENSE" }
 authors = [
