@@ -11,7 +11,7 @@ A pure-NumPy/SciPy time series forecasting library built around the **DNA** mode
 
 No TensorFlow. No PyTorch. No black boxes. Every equation is documented.
 
-**Full mathematical derivations (PhD-level):**
+**Full mathematical derivations:**
 [MATH.md on GitHub](https://github.com/Parsa-Hajian/universitybox/blob/main/MATH.md)
 
 ---
@@ -242,7 +242,7 @@ class MyForecaster(BaseForecaster):
 
 ## Mathematical documentation
 
-The full PhD-level mathematical derivation is in
+Full derivations for every formula in the package:
 [MATH.md](https://github.com/Parsa-Hajian/universitybox/blob/main/MATH.md), covering:
 
 1. Notation and problem statement

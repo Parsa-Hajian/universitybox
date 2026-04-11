@@ -29,7 +29,7 @@ from .segments import Club
 
 from .forecast._base import BaseForecaster
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 __author__  = "UniversityBox Data Team"
 
 __all__ = [
