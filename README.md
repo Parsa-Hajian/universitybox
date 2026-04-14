@@ -5,7 +5,7 @@
 [![PyPI](https://img.shields.io/pypi/v/universitybox)](https://pypi.org/project/universitybox/)
 [![Python](https://img.shields.io/pypi/pyversions/universitybox)](https://pypi.org/project/universitybox/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/Parsa-Hajian/universitybox/blob/main/LICENSE)
-[![Tests](https://img.shields.io/badge/tests-30%20passed-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-90%2B%20passed-brightgreen)]()
 
 A pure-NumPy/SciPy time series forecasting library built around the **DNA** model — a three-stage hierarchical forecaster combining classical decomposition, nonlinear basis expansion, and adaptive Kalman filtering.
 
@@ -339,7 +339,7 @@ See [CONTRIBUTING.md](https://github.com/Parsa-Hajian/universitybox/blob/main/CO
   title   = {universitybox: DNA Dynamic Nonlinear Adaptive Forecaster},
   year    = {2026},
   url     = {https://github.com/Parsa-Hajian/universitybox},
-  version = {0.1.2}
+  version = {0.1.7}
 }
 ```
 

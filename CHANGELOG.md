@@ -7,6 +7,32 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [0.1.7] — 2026-04-14
+
+### Changed
+- Stabilised `universitybox.survey` after beta testing — all 90+ tests passing
+- `SurveySynthesizer`: improved Gibbs sampler convergence for small-N ordinal data
+- `SurveySchema`: clearer validation errors for out-of-range scale bounds
+- GUI (`launch_gui`): fixed progress bar hanging on large N synthesis runs
+
+### Fixed
+- `DNA`: edge case where `period='auto'` returned 1 on very short series (< 2× period)
+- `metrics.mase`: divide-by-zero guard when all naive errors are zero
+
+---
+
+## [0.1.6] — 2026-04-10
+
+### Added
+- `segments.InterestSegment`: ranked category preference output — one row per user with all categories ranked by click volume (sparse: missing categories absent, treated as 0)
+- `segments.InterestSegment.get_category_order()`: pipe-separated ranked category string for efficient top-N filtering
+- 68 additional unit tests across survey and segments modules (total: 90+)
+
+### Changed
+- `segments.Club` renamed to `segments.InterestSegment` (Club kept as alias for backwards compatibility)
+
+---
+
 ## [0.1.5] — 2026-04-08
 
 ### Added
